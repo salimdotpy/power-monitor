@@ -1,0 +1,10 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for cat, message in messages %}
+<script>
+    let type = '{{cat}}';
+    toast.show({ text: '{{message}}', type });
+</script>
+{% endfor %}
+{% endif %}
+{% endwith %}

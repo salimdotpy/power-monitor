@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <title>{% if pageTitle %} {{ pageTitle }} | {% endif %} Power monitoring app</title>
+  {% include 'partials/seo.html' %}
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/toast.css') }}" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="flex flex-col gap-5 w-full bg-slate-100">
+  <div class="loading">
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <header class="bg-white px-6 py-5 shadow-lg {% if pageTitle != 'Power Monitor' %} flex items-center gap-3{% endif %}">
+    {% if pageTitle != 'Power Monitor' %}
+    <a href="{{ url_for('index_route' ) }}" class="text-xl">⬅️</a>
+    {% endif %}
+    <h1 class="font-bold text-xl">{{ pageTitle }}</h1>
+  </header>
+  <main class="px-5">
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  {% include 'partials/notify.html' %}
+  {% block script %}{% endblock %}
+  <script>
+    const lockBtn = $.select('#lockBtn');
+    const statusDiv = $.select('#wakeStatus');
+    let wakeLock = null;
+
+    // 1. Check Browser Support Immediately
+    if ('wakeLock' in navigator) {
+      $.removeAttr(lockBtn, 'disabled');
+      $.text(lockBtn, 'Enable Wake Lock');
+      // $.text(statusDiv, 'Wake Lock API is supported.');
+      // $.css(statusDiv, { color: 'green' });
+      toast.success('Wake Lock API is supported.', { pos: 'bottom-center' });
+    } else {
+      // $.text(statusDiv, 'Wake Lock API is NOT supported in this browser.');
+      // $.css(statusDiv, { color: 'red' });
+      $.text(lockBtn, 'Unsupported');
+      toast.error('Wake Lock API is NOT supported in this browser.', { pos: 'bottom-center' });
+    }
+
+    // 2. Request Wake Lock Function
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+
+        // Update UI
+        $.text(lockBtn, 'Disable Wake Lock');
+        // $.text(statusDiv, 'Screen will stay awake.');
+        // $.css(statusDiv, { color: 'blue' });
+        toast.info('Screen will stay awake.', { pos: 'bottom-center' });
+
+        // Listen for accidental/system releases
+        wakeLock.addEventListener('release', () => {
+          console.log('Wake Lock was released');
+          // toast.info('Wake Lock was released');
+        });
+
+      } catch (err) {
+        console.log(err);
+        // $.text(statusDiv, `Error: ${err.message}`);
+        // $.css(statusDiv, { color: 'red' });
+      }
+    }
+
+    // 3. Release Wake Lock Function
+    async function releaseWakeLock() {
+      if (!wakeLock) return;
+
+      await wakeLock.release();
+      wakeLock = null;
+
+      // Update UI
+      $.text(lockBtn, 'Enable Wake Lock');
+      // $.text(statusDiv, 'Wake Lock released. Screen can dim.');
+      // $.css(statusDiv, { color: 'green' });
+      toast.success('Wake Lock released. Screen can dim.', { pos: 'bottom-center' });
+    }
+
+    // 4. Toggle Button Event Listener
+    lockBtn.addEventListener('click', async () => {
+      if (wakeLock === null) {
+        await requestWakeLock();
+      } else {
+        await releaseWakeLock();
+      }
+    });
+
+    // 5. Re-acquire Lock on Visibility Change (Tab switching)
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+      }
+    });
+  </script>
+</body>
+
+</html>

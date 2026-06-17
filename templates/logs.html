@@ -1,0 +1,126 @@
+{% extends 'layout.html' %} {% block content %}
+<div class="bg-white rounded-lg shadow-lg">
+  <div class="py-6">
+    <div class="flex flex-wrap items-center gap-3 px-4 pb-2">
+      <h3 class="font-bold">Log records</h3>
+      <div class="ml-auto border rounded-md px-4 py-1.5 flex items-center gap-2
+            focus-within:border-blue-600
+            focus-within:ring-2
+            focus-within:ring-blue-200">
+        <input id="searchLog" type="text" class="outline-none border-none bg-transparent" placeholder="Search ..."
+          onkeyup="searchFilter(this.value)" />
+        <span>🔍</span>
+      </div>
+    </div>
+    <div class="overflow-auto static max-h-[67dvh]">
+      <table class="w-full min-w-max table-auto text-left">
+        <thead class="sticky top-0 z-10 bg-[#f2f2f2]">
+          <tr class="*:p-4 border-b">
+            <th>SN</th>
+            <th>Status</th>
+            <th>Start at</th>
+            <th>End at</th>
+            <th>Interval</th>
+          </tr>
+        </thead>
+        <tbody id="logs-container">
+          <tr>
+            <td colSpan="100%" class="p-4 text-center font-bold">Log records will appear here</td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="msg" class="text-center p-4"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+
+  let powerLogs;
+  const container = $.one('#logs-container');
+  const msg = $.one('#msg');
+
+  function searchFilter(q = '') {
+    const query = q.toLowerCase();
+    let visibleRows = 0;
+    const rows = $.all('#logs-container tr');
+    for (let i = 0; i < rows.length; i++) {
+      let cells = rows[i].getElementsByTagName("td");
+      let match = false;
+      for (let j = 0; j < cells.length; j++) {
+        if (cells[j]) {
+          const text = cells[j].textContent || cells[j].innerText;
+          if (text.toLowerCase().indexOf(query) > -1) {
+            match = true;
+            break;
+          }
+        }
+      }
+      rows[i].style.display = match ? "" : "none";
+      if (rows[i].style.display !== "none") visibleRows++;
+    }
+    if (visibleRows === 0 && query !== "") $.html(msg, `No row match <b>(${query})</b>`);
+    else $.html(msg, "");
+  }
+
+  // rows that need live interval updates
+  const liveRows = [];
+
+  $.ready(async () => {
+    powerLogs = await getLogs();
+    displayRows();
+    const intervalEle = $.one('.interval');
+    if (intervalEle) {
+      setInterval(updateIntervals, 1000);
+    }
+  });
+
+
+
+  async function displayRows() {
+    let data = powerLogs || [];
+
+    let html = "";
+    $.each(data, ({ id, status, startTime, endTime, interval }, idx) => {
+      html += `
+        <tr data-id="${id}" class="*:p-4 border-b">
+          <td>${idx + 1}</td>
+          <td>${status ? "Plugged In" : "Plugged Out"}</td>  
+          <td>${formatFullDate(startTime)}</td>
+          <td>${endTime ? formatFullDate(endTime) : '-'}</td>
+           <td class="interval" data-time="${startTime}">
+        ${interval
+          ? formatDuration((new Date(interval)))
+          : "It's been " + formatDuration(Date.now() - new Date(startTime))
+        }
+      </td>
+        </tr>
+        `;
+
+      if (!interval) liveRows.push({ id, startTime: new Date(startTime) });
+    });
+    $.html(container, html);
+  }
+
+  function updateIntervals() {
+    const intervalEle = $.one('.interval');
+    if (!intervalEle) return;
+
+    const startTime = new Date($.attr(intervalEle, 'data-time'));
+    const now = Date.now();
+    intervalEle.innerHTML = "It's been " + formatDuration(now - startTime);
+  }
+
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then((battery) => {
+      battery.addEventListener('chargingchange', async () => {
+        powerLogs = await getLogs();
+        displayRows();
+      });
+    });
+  } else {
+    console.log("Battery API not supported.");
+  }
+</script>
+{% endblock %}
