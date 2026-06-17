@@ -1,0 +1,21 @@
+# --- Flask Core ---
+Flask==3.1.1
+Flask-Cors==6.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-WTF==1.2.2
+Flask-Migrate==4.1.0
+Flask-Mailman==1.1.1
+
+# --- MySQL Drivers (use PyMySQL for AlwaysData) ---
+mysql-connector-python          # unpinned to allow AlwaysData to pick compatible version
+pymysql                         # unpinned for same reason
+
+# --- .env Loader ---
+python-dotenv==1.1.1
+
+# --- Utilities ---
+bleach==6.2.0
+requests==2.32.3
+
+# --- Werkzeug ---
+werkzeug==3.1.3
