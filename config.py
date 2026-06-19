@@ -5,6 +5,9 @@ env = os.getenv("FLASK_ENV", "development")
 
 # Load local .env only in development
 if env == "development":
+    from dotenv import load_dotenv
+    load_dotenv(".env.development")
+else:
     # Make backend folder importable
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -13,10 +16,8 @@ if env == "development":
 
     # Load environment variables if set
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(BASE_DIR, ".env.production"))
-else:
-    from dotenv import load_dotenv
-    load_dotenv(".env.development")
+    load_dotenv(os.path.join(BASE_DIR, ".env.production"),
+    override=True)
 print("="*500)
 
 class Config:
