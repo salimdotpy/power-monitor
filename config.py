@@ -1,4 +1,4 @@
-import os, sys
+import os
 
 # Determine environment
 env = os.getenv("FLASK_ENV", "development")
@@ -7,18 +7,6 @@ env = os.getenv("FLASK_ENV", "development")
 if env == "development":
     from dotenv import load_dotenv
     load_dotenv(".env.development")
-else:
-    # Make backend folder importable
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-    if BASE_DIR not in sys.path:
-        sys.path.insert(0, BASE_DIR)
-
-    # Load environment variables if set
-    from dotenv import load_dotenv
-    load_dotenv(os.path.join(BASE_DIR, ".env.production"),
-    override=True)
-print("="*500)
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
