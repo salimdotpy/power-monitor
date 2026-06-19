@@ -7,6 +7,9 @@ env = os.getenv("FLASK_ENV", "development")
 if env == "development":
     from dotenv import load_dotenv
     load_dotenv(".env.development")
+else:
+    from dotenv import load_dotenv
+    load_dotenv(".env.production")
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")

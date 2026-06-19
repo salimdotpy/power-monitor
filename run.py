@@ -7,6 +7,7 @@ import re
 from datetime import datetime
 from flask_mailman import Mail, EmailMessage
 from utlis import mail_template, format_duration
+from sqlalchemy import text
 
 app = Flask(__name__)
 app.config.from_object(Config)
