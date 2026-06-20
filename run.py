@@ -133,36 +133,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run()
-
-"""
-const sendStatusEmail = async (isCharging) => {
-      try {
-        const data = await getSettings();
-        if (!data) return;
-        // Fetch the last closed log and the new active log for the email body
-        const logs = await db.powerLogs.orderBy('id').reverse().limit(2).toArray();
-        const activeLog = logs[0]; // The log just inserted
-        const closedLog = logs[1]; // The previous log that was just closed
-
-        const statusText = isCharging ? "Connected to Power" : "Disconnected from Power";
-        const durationText = closedLog ? formatDuration(closedLog.interval) : "N/A";
-        const statusIcon = isCharging ? '🔌' : '🔋'
-        const email = data?.email;
-        const name = email?.split('@')[0] || 'admin';
-        const templateParams = {
-          status_text: statusText,
-          time: new Date(activeLog.startTime).toLocaleString(),
-          duration: durationText,
-          status_icon: statusIcon,
-          name,
-          email,
-        };
-
-        // Send template out via EmailJS
-        await emailjs.send('service_amru6ti', 'template_0kkr9gx', templateParams);
-        console.log('Status email dispatched successfully.');
-      } catch (error) {
-        console.error('EmailJS failed to dispatch:', error);
-      }
-    };
-"""
