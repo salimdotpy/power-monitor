@@ -1,23 +1,31 @@
 import os
+from dotenv import load_dotenv
 
 # Determine environment
-env = os.getenv("FLASK_ENV", "development")
+env = load_dotenv(".env.development")
 
 # Load local .env only in development
-if env == "development":
-    from dotenv import load_dotenv
-    load_dotenv(".env.development")
+if not env:
+    load_dotenv("/home/poms/mysite/.env.production")
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    if not env:
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "connect_args": {
+                "ssl": {
+                    "ca": "/home/poms/certs/ca.pem"
+                }
+            }
+        }
     SQLALCHEMY_POOL_RECYCLE = 299
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Debugging
-    DEBUG = env == "development"
+    DEBUG = env
     THREADED = True
 
     # Mail settings

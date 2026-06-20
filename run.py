@@ -3,20 +3,11 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from models import db, Setting, PowerLogs
 from config import Config
-import re, os
+import re
 from datetime import datetime
 from flask_mailman import Mail, EmailMessage
 from utlis import mail_template, format_duration
 from sqlalchemy import text
-
-# FOR PRODUCTION
-from dotenv import load_dotenv
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-load_dotenv(os.path.join(BASE_DIR, ".env.production"), override=True)
-# ENDFOR PRODUCTION
-
 
 app = Flask(__name__)
 app.config.from_object(Config)
