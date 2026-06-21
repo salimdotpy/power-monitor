@@ -130,6 +130,7 @@ def send_mail_api():
         print(f"Error sending mail {e}")
         return jsonify({ 'success': False })
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run()
+    # with app.app_context():
+    #     db.create_all()
+    # app.run()
+    app.run(debug=True)

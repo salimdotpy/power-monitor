@@ -1,5 +1,7 @@
 import os
 from dotenv import load_dotenv
+import base64
+import tempfile
 
 # Determine environment
 env = load_dotenv(".env.development")
@@ -8,16 +10,28 @@ env = load_dotenv(".env.development")
 if not env:
     load_dotenv("/home/poms/mysite/.env.production")
 
+ca_b64 = os.getenv("AIVEN_CA_CERT_BASE64")
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
-    if not env:
+    if ca_b64:
+        cert_data = base64.b64decode(ca_b64)
+
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            suffix=".pem",
+            delete=False
+        ) as f:
+            f.write(cert_data)
+            ca_path = f.name
+
         SQLALCHEMY_ENGINE_OPTIONS = {
             "connect_args": {
                 "ssl": {
-                    "ca": "/home/poms/certs/ca.pem"
+                    "ca": ca_path
                 }
             }
         }
