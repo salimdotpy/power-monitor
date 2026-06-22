@@ -7,7 +7,6 @@ import re
 from datetime import datetime
 from flask_mailman import Mail, EmailMessage
 from utlis import mail_template, format_duration
-from sqlalchemy import text
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -129,6 +128,41 @@ def send_mail_api():
     except Exception as e:
         print(f"Error sending mail {e}")
         return jsonify({ 'success': False })
+    
+@app.route("/db-test")
+def db_test():
+    import pymysql
+    import os
+    import base64
+    import tempfile
+
+    ca_b64 = os.getenv("AIVEN_CA_CERT_BASE64")
+    if ca_b64:
+        cert_data = base64.b64decode(ca_b64)
+
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            suffix=".pem",
+            delete=False
+        ) as f:
+            f.write(cert_data)
+            ca_path = f.name
+
+    try:
+        conn = pymysql.connect(
+            host="mysql-8bab47a-salimdotpy-775e.b.aivencloud.com",
+            port=23352,
+            user="avnadmin",
+            password="REMOVED",
+            database="defaultdb",
+            ssl={"ca": ca_path},
+        )
+
+        conn.close()
+        return {"success": True}
+
+    except Exception as e:
+        return {"success": False, "error": repr(e)}
 if __name__ == '__main__':
     # with app.app_context():
     #     db.create_all()
