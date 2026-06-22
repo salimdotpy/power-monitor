@@ -79,7 +79,7 @@ def logs_api():
             # if lastLog and lastLog.status == status:
             #     status = not status
             if lastLog and lastLog.status == status:
-                print(f'Duplicate state ignored: Power is already {'plugged in' if status else 'plugged out'}.')
+                # print(f'Duplicate state ignored: Power is already {'plugged in' if status else 'plugged out'}.')
                 return jsonify({ 'success': False })
             if lastLog:
                 lastStartTime = lastLog.startTime or now
