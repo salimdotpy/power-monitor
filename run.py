@@ -150,11 +150,11 @@ def db_test():
 
     try:
         conn = pymysql.connect(
-            host="mysql-8bab47a-salimdotpy-775e.b.aivencloud.com",
-            port=23352,
-            user="avnadmin",
-            password="REMOVED",
-            database="defaultdb",
+            host=os.getenv("DATABASE_HOST"),
+            port=os.getenv("DATABASE_PORT"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+            database=os.getenv("DATABASE_NAME"),
             ssl={"ca": ca_path},
         )
 
