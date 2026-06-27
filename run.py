@@ -25,8 +25,8 @@ def index_route():
 @app.route("/settings", methods=['GET', 'POST'])
 def settings_route():
     pageTitle = "Settings"
-    settings = Setting.query.filter_by(id=1).first()
-    settings = Setting.to_dict(settings) if settings else {}
+    # settings = Setting.query.filter_by(id=1).first()
+    # settings = Setting.to_dict(settings) if settings else {}
 
     if request.method == "POST":
         email = request.form.get("email").strip()
@@ -56,7 +56,8 @@ def settings_route():
                 msg = ['Something went wrong, Please try again!', 'error']
         flash(msg[0], (msg[1]))
         return redirect(request.referrer)
-    return render_template('settings.html', pageTitle=pageTitle, settings=settings)
+    # return render_template('settings.html', pageTitle=pageTitle, settings=settings)
+    return render_template('settings.html', pageTitle=pageTitle)
 
 @app.route("/logs", methods=['GET', 'POST'])
 def logs_route():
@@ -129,40 +130,6 @@ def send_mail_api():
         print(f"Error sending mail {e}")
         return jsonify({ 'success': False })
     
-@app.route("/db-test")
-def db_test():
-    import pymysql
-    import os
-    import base64
-    import tempfile
-
-    ca_b64 = os.getenv("AIVEN_CA_CERT_BASE64")
-    if ca_b64:
-        cert_data = base64.b64decode(ca_b64)
-
-        with tempfile.NamedTemporaryFile(
-            mode="wb",
-            suffix=".pem",
-            delete=False
-        ) as f:
-            f.write(cert_data)
-            ca_path = f.name
-
-    try:
-        conn = pymysql.connect(
-            host=os.getenv("DATABASE_HOST"),
-            port=int(os.getenv("DATABASE_PORT")),
-            user=os.getenv("DATABASE_USER"),
-            password=os.getenv("DATABASE_PASSWORD"),
-            database=os.getenv("DATABASE_NAME"),
-            ssl={"ca": ca_path},
-        )
-
-        conn.close()
-        return {"success": True}
-
-    except Exception as e:
-        return {"success": False, "error": repr(e)}
 if __name__ == '__main__':
     # with app.app_context():
     #     db.create_all()

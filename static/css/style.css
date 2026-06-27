@@ -47,6 +47,7 @@
     aspect-ratio: 1;
     background-color: purple;
     border-radius: 30px;
+    /* display: inline-block; */
     animation: loading 1s ease-in-out alternate infinite;
   }
 

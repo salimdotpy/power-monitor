@@ -1,4 +1,13 @@
 const $ = {
+  _anim: new WeakMap(), // store {id, type} per element so we can cancel
+
+  _cancel(el) {
+    const state = this._anim.get(el);
+    if (state && state.id) {
+      cancelAnimationFrame(state.id);
+    }
+    this._anim.delete(el);
+  },
   // --- DOM SELECTION ---
   // $('.class') or $('#id') or $('div')
   select(selector, context = document) {
@@ -133,70 +142,141 @@ const $ = {
   },
 
   // --- EFFECTS ---
+
   hide(el) {
+    this._cancel(el);
     el.style.display = 'none';
+    el.style.opacity = ''; // reset so fadeIn works next time
   },
 
   show(el, display = 'block') {
+    this._cancel(el); // stop any fadeOut in progress
     el.style.display = display;
+    el.style.opacity = ''; // reset inline opacity
   },
 
   toggle(el, display = 'block') {
-    el.style.display = el.style.display === 'none' ? display : 'none';
+    const isHidden = getComputedStyle(el).display === 'none';
+    isHidden ? this.show(el, display) : this.hide(el);
   },
 
-  fadeIn(el, duration = 300) {
+  fadeIn(el, duration = 300, display = 'block') {
+    this._cancel(el); // if fading out, stop it
+
+    const computed = getComputedStyle(el);
+    if (computed.display !== 'none' && parseFloat(el.style.opacity || 1) === 1) return; // already visible
+
+    el.style.display = display;
     el.style.opacity = 0;
-    el.style.display = 'block';
+
     let start = null;
-    const step = (timestamp) => {
-      if (!start) start = timestamp;
-      const progress = (timestamp - start) / duration;
-      el.style.opacity = Math.min(progress, 1);
-      if (progress < 1) requestAnimationFrame(step);
+    const step = (ts) => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      el.style.opacity = p;
+      if (p < 1) {
+        const id = requestAnimationFrame(step);
+        this._anim.set(el, { id, type: 'fadeIn' });
+      } else {
+        el.style.opacity = ''; // clean up inline style like jQuery
+        this._anim.delete(el);
+      }
     };
-    requestAnimationFrame(step);
+    const id = requestAnimationFrame(step);
+    this._anim.set(el, { id, type: 'fadeIn' });
   },
 
   fadeOut(el, duration = 300) {
+    this._cancel(el); // if fading in, stop it
+
+    const computed = getComputedStyle(el);
+    if (computed.display === 'none') return; // already hidden
+
     let start = null;
-    const step = (timestamp) => {
-      if (!start) start = timestamp;
-      const progress = (timestamp - start) / duration;
-      el.style.opacity = 1 - Math.min(progress, 1);
-      if (progress < 1) requestAnimationFrame(step);
-      else el.style.display = 'none';
+    const startOpacity = parseFloat(el.style.opacity) || 1;
+
+    const step = (ts) => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      el.style.opacity = startOpacity * (1 - p);
+      if (p < 1) {
+        const id = requestAnimationFrame(step);
+        this._anim.set(el, { id, type: 'fadeOut' });
+      } else {
+        el.style.display = 'none';
+        el.style.opacity = ''; // clean up
+        this._anim.delete(el);
+      }
     };
-    requestAnimationFrame(step);
+    const id = requestAnimationFrame(step);
+    this._anim.set(el, { id, type: 'fadeOut' });
   },
 
+  fadeToggle(el, duration = 300, display = 'block') {
+    const isHidden = getComputedStyle(el).display === 'none' || parseFloat(getComputedStyle(el).opacity) === 0;
+    isHidden ? this.fadeIn(el, duration, display) : this.fadeOut(el, duration);
+  },
   // --- AJAX ---
-  // $.get('/api', fn) or $.post('/api', data, fn)
-  async get(url, success, error) {
+  // Unified get/post with options object
+  async ajax(method, url, data, { success, error, before, after } = {}) {
     try {
-      const res = await fetch(url);
-      const data = await res.json();
-      success?.(data);
-    } catch (e) {
-      error?.(e);
-    }
-  },
-
-  async post(url, data, success, error) {
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
+      before?.();
+      const opts = {
+        method: method.toUpperCase(),
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+        ...(data && { body: JSON.stringify(data) })
+      };
+      const res = await fetch(url, opts);
       const result = await res.json();
       success?.(result);
     } catch (e) {
       error?.(e);
+    } finally {
+      after?.();
     }
   },
+  // $.get('/api', fn)
+  get(url, opts) {
+    return this.ajax('get', url, null, opts);
+  },
+
+  // $.post('/api', data, fn)
+  post(url, data, opts) {
+    return this.ajax('post', url, data, opts);
+  },
+
+  // async get(url, success, error, before, after) {
+  //   try {
+  //     before?.();
+  //     const res = await fetch(url);
+  //     const data = await res.json();
+  //     success?.(data);
+  //   } catch (e) {
+  //     error?.(e);
+  //   } finally {
+  //     after?.();
+  //   }
+  // },
+
+  // async post(url, data, success, error, before, after) {
+  //   try {
+  //     before?.();
+  //     const res = await fetch(url, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(data)
+  //     });
+  //     const result = await res.json();
+  //     success?.(result);
+  //   } catch (e) {
+  //     error?.(e);
+  //   } finally {
+  //     after?.();
+  //   }
+  // },
 
   // --- UTILITIES ---
+
   each(arr, fn) {
     arr.forEach(fn);
   },

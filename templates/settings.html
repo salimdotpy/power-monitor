@@ -2,13 +2,12 @@
 
 <div class="bg-white rounded-lg shadow-lg py-4">
   <h3 class="px-4 pb-2 border-b-2 font-bold">Settings</h3>
-  <form id="settingsForm" method="post" class="p-5 [&_input]:border space-y-5">
+  <form id="settingsForm" class="p-5 [&_input]:border space-y-5">
     <div>
       <div class="flex justify-between items-center">
         <label for="email">Email address</label>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input id="sendEmail" name="sendEmail" {% if settings.sendEmail %} checked {% endif %} type="checkbox"
-            class="sr-only peer" />
+          <input id="sendEmail" name="sendEmail" type="checkbox" class="sr-only peer" />
 
           <!-- Track: w-9 h-5 instead of w-11 h-6 -->
           <div class="w-9 h-5 bg-gray-300 peer-focus:ring-2 peer-focus:ring-blue-300
@@ -19,15 +18,14 @@
               after:h-4 after:w-4 after:transition-all"></div>
         </label>
       </div>
-      <input id="email" type="email" value="{{settings.email}}" name="email" required
+      <input id="email" type="email" name="email" required
         class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 mt-2" />
     </div>
     <div>
       <div class="flex justify-between items-center">
         <label for="mobile">Phone number</label>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input id="sendSms" name="sendSms" type="checkbox" {% if settings.sendSms %} checked {% endif %}
-            class="sr-only peer" />
+          <input id="sendSms" name="sendSms" type="checkbox" class="sr-only peer" />
 
           <!-- Track: w-9 h-5 instead of w-11 h-6 -->
           <div class="w-9 h-5 bg-gray-300 peer-focus:ring-2 peer-focus:ring-blue-300
@@ -38,7 +36,7 @@
               after:h-4 after:w-4 after:transition-all"></div>
         </label>
       </div>
-      <input id="mobile" type="tel" name="mobile" value="{{settings.mobile}}" required
+      <input id="mobile" type="tel" name="mobile" required
         class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 mt-2" />
     </div>
     <div class="px-3 py-2 rounded-md border hidden items-center justify-between font-bold">
@@ -62,7 +60,47 @@
 {% endblock %}
 {% block script %}
 <script>
-  const container = $.one('#logs-container');
-  const msg = $.one('#msg');
+  $.ready(async function () {
+    const settingsForm = document.getElementById('settingsForm');
+    const loading = $.select('.loading');
+
+    $.get('https://lapmeasure.pythonanywhere.com/api/settings', {
+      success: (res) => {
+        const data = res.settings;
+        if (data) {
+          const keys = ['email', 'mobile', 'sendEmail', 'sendSms']
+          keys.map((key, idx) => {
+            if (idx > 1)
+              document.getElementById(`${key}`).checked = data[key] || false;
+            else
+              document.getElementById(`${key}`).value = data[key];
+          })
+        }
+      },
+      error: (e) => console.error(e),
+      before: () => { console.log('loading...', loading); $.show(loading, 'flex'); },
+      after: () => { console.log('loaded', loading); $.fadeOut(loading); }
+    });
+
+
+    $.on(settingsForm, 'submit', async (event) => {
+      event.preventDefault();
+      const settingsData = {
+        email: $.one('#email').value,
+        sendEmail: $.one('#sendEmail').checked,
+        mobile: $.one('#mobile').value,
+        sendSms: $.one('#sendSms').checked,
+      }
+      await $.post('https://lapmeasure.pythonanywhere.com/api/settings', settingsData,
+        {
+          success: (data) => console.log(data),
+          error: (e) => console.error(e),
+          before: () => { $.show(loading, 'flex'); },
+          after: () => { $.fadeOut(loading); }
+        }
+      );
+    })
+
+  });
 </script>
 {% endblock %}

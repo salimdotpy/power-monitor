@@ -64,34 +64,40 @@ function formatDuration(ms) {
 
 async function addPowerLog(isCharging) {
   let data;
-  await $.post('/api/logs', { status: isCharging },
-    (res) => {
-      data = res;
-    }, (err) => {
-      console.log(err);
-      data = { success: false };
+  await $.post('https://lapmeasure.pythonanywhere.com/api/logs', { status: isCharging },
+    {
+      success: (res) => { data = res; },
+      error: (err) => {
+        console.log(err);
+        data = { success: false };
+      }
     }); return data;
 }
 
 async function sendStatusEmail(status) {
-  await $.post('/api/send-mail', { status },
-    (res) => {
-      console.log(res);
-      return res
-    }, (err) => {
-      console.log(err);
-      return { success: false };
+  await $.post('https://lapmeasure.pythonanywhere.com/api/send-mail', { status },
+    {
+      success: (res) => {
+        console.log(res);
+        return res
+      },
+      error: (err) => {
+        console.log(err);
+        return { success: false };
+      }
     })
 }
 
 async function getLogs() {
   let data;
-  await $.get('/api/logs', (res) => {
-    data = res.logs
-  }, (err) => {
-    console.log(err);
-    data = { success: false };
-  });
+  await $.get('https://lapmeasure.pythonanywhere.com/api/logs',
+    {
+      success: (res) => { data = res.logs },
+      error: (err) => {
+        console.log(err);
+        data = { success: false };
+      },
+    });
   return data;
 }
 
