@@ -40,6 +40,7 @@
   let powerLogs;
   const container = $.one('#logs-container');
   const msg = $.one('#msg');
+  const loading = $.select('.loading');
 
   function searchFilter(q = '') {
     const query = q.toLowerCase();
@@ -68,15 +69,15 @@
   const liveRows = [];
 
   $.ready(async () => {
+    $.show(loading, 'flex');
     powerLogs = await getLogs();
+    $.fadeOut(loading)
     displayRows();
     const intervalEle = $.one('.interval');
     if (intervalEle) {
       setInterval(updateIntervals, 1000);
     }
   });
-
-
 
   async function displayRows() {
     let data = powerLogs || [];

@@ -93,10 +93,14 @@
       }
       await $.post('https://lapmeasure.pythonanywhere.com/api/settings', settingsData,
         {
-          success: (data) => console.log(data),
+          success: (data) => {
+            console.log(data);
+            if (data.success) toast.success(data?.msg?.[0])
+            else toast.error(data?.msg?.[0])
+          },
           error: (e) => console.error(e),
-          before: () => { $.show(loading, 'flex'); },
-          after: () => { $.fadeOut(loading); }
+          before: () => $.show(loading, 'flex'),
+          after: () => $.fadeOut(loading)
         }
       );
     })
