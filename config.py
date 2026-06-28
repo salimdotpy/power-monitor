@@ -4,17 +4,8 @@ from dotenv import load_dotenv
 # Determine environment
 env = load_dotenv(".env.development")
 
-# Load local .env only in development
-if not env:
-    load_dotenv("/home/poms/mysite/.env.production")
-
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
-
-    # Database
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
-    SQLALCHEMY_POOL_RECYCLE = 299
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Debugging
     DEBUG = env

@@ -78,8 +78,8 @@
         }
       },
       error: (e) => console.error(e),
-      before: () => { console.log('loading...', loading); $.show(loading, 'flex'); },
-      after: () => { console.log('loaded', loading); $.fadeOut(loading); }
+      before: () => { $.show(loading, 'flex'); },
+      after: () => { $.fadeOut(loading); }
     });
 
 
